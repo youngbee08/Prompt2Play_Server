@@ -3,6 +3,7 @@ const {generateverificationToken} = require("../services/cryptoServices");
 const sendEmailVerification = require("../utils/nodemailer/sendEmailVerification");
 const {generateAccessToken} = require("../services/jwtServices");
 const { hashPassword, verifyPassword } = require("../services/bcryptServices");
+const sendForgotPasswordMail = require("../utils/nodemailer/sendResetPasswordMail");
 const signUp = async (req,res,next) => {
     const {body} = req;
     if (!body) {
@@ -76,7 +77,7 @@ const resendMail = async (req,res,next) =>{
 const reloadUser = async (req,res,next) =>{
     const {email} = req.body;
     try {
-        const user = await userModel.findOne({email});
+        const user = await userModel.findOne({email}).select("-password");
         if (!user) {
             return res.status(404).json({
                 status:"error",
@@ -132,7 +133,7 @@ const signIn = async (req,res,next) =>{
                 message:"Invalid Credentials"
             })
         }
-        const verifiedPassword = verifyPassword(password,user)
+        const verifiedPassword = await verifyPassword(password,user)
         if (!verifiedPassword) {
             return res.status(400).json({
                 status:"error",
@@ -159,10 +160,150 @@ const signIn = async (req,res,next) =>{
     }
 };
 
+const requestforgotPasswordMail = async (req,res,next) =>{
+    if (!req.body?.email) {
+        return res.status(400).json({
+            status:"error",
+            message:"Please provide your email"
+        })
+    }
+    const {email} = req.body;
+    try {
+        const user = await userModel.findOne({email});
+        if (!user) {
+            return res.status(404).json({
+                status:"error",
+                message:"Account with the provided email doesn't exist"
+            })
+        };
+        const token = generateverificationToken(8);
+        const tokenExp = Date.now() + 5 * 60 * 1000;
+        await userModel.findByIdAndUpdate(user._id, {emailVerifytoken:token, emailVerifytokenExp:tokenExp});
+        sendForgotPasswordMail(user.userName, user.email, token);
+        res.status(200).json({
+            status:"status",
+            message:"Password reset link mail has been sent successfully"
+        })
+    } catch (error) {
+        console.log(error)
+        next(error)
+    }
+};
+
+const setForgotPassword = async (req, res, next) => {
+    if (!req.body?.newPassword) {
+        return res.status(400).json({
+            status: "error",
+            message: "New password is required."
+        });
+    }
+    const { token } = req.params;
+    const {newPassword} = req.body;
+    try {
+        const newHashedPassword = await hashPassword(newPassword);
+        const user = await userModel.findOne({ emailVerifytoken: token });
+
+        if (!user) {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid or expired reset link. Please request a new password reset email."
+            });
+        }
+
+        if (Date.now() > user.emailVerifytokenExp) {
+            return res.status(410).json({
+                status: "error",
+                message: "This password reset link has expired. Please request a new one."
+            });
+        }
+
+
+        await userModel.findByIdAndUpdate(user._id, {
+            password:newHashedPassword,
+            emailVerifytoken: null,
+            emailVerifytokenExp: null
+        });
+
+        return res.status(200).json({
+            status: "success",
+            message: "Password reset successfully. You may now sign in"
+        });
+
+    } catch (error) {
+        console.error("Password reset error:", error);
+        next(error);
+    }
+};
+
+const resetPassword = async (req,res,next) =>{
+    const user = req.user;
+    const {oldPassword,newPassword} = req.body;
+    try {
+        const verifiedPassword = await verifyPassword(oldPassword, user);
+        if (!verifiedPassword) {
+            return res.status(400).json({
+                status:"error",
+                message:"Old password is incorrect"
+            })
+        };
+
+        const isSamePassword = await verifyPassword(newPassword, user);
+        if (isSamePassword) {
+            return res.status(400).json({
+                status: "error",
+                message: "New password must be different from the old password."
+            });
+        }
+
+        const newHashedPassword = await hashPassword(newPassword);
+        await userModel.findByIdAndUpdate(user._id, {password:newHashedPassword});
+        res.status(200).json({
+            status:"success",
+            message:"Password reset successfully"
+        })
+    } catch (error) {
+        console.log(error)
+        next(error)
+    }
+};
+
+const updateProfile = async (req,res,next)=>{
+    if (!req.body) {
+        return res.status(400).json({
+            status:"error",
+            message:"All fields are required"
+        })
+    }
+    if (!req.file) {
+        return res.status(400).json({
+            status:"error",
+            message:"Profile picture is required"
+        })
+    }
+    const user = req.user;
+    const {fullName,userName,phoneNumber} = req.body;
+    const profilePic = req.file.path;
+    try {
+        await userModel.findByIdAndUpdate(user._id, {fullName,userName,phoneNumber,profilePic:profilePic})
+        res.status(200).json({
+            status:"success",
+            message:"New changes were saved",
+        })
+    } catch (error) {
+        console.log(error)
+        next(error)
+    }
+};
+
+
 module.exports = {
     signUp,
     resendMail,
     reloadUser,
     verifyEmail,
-    signIn
+    signIn,
+    requestforgotPasswordMail,
+    setForgotPassword,
+    resetPassword,
+    updateProfile
 }

@@ -1,5 +1,6 @@
 const cloudinary = require("../config/cloudinary");
 const { enhanceAndSplitPromptWithCohere } = require("../services/cohereaiservices");
+const { generateVideoFromImageWithRunwayml } = require("../services/runwaymlServices");
 const { generateImageFromPromptWithStability } = require("../services/stabilityaiServices");
 
 const generateAIVideoWithPrompt = async (req, res, next) => {
@@ -13,7 +14,7 @@ const generateAIVideoWithPrompt = async (req, res, next) => {
 
   const { prompt } = body;
   try {
-    const enhancedText = await enhanceAndSplitPromptWithCohere(prompt);
+    /*const enhancedText = await enhanceAndSplitPromptWithCohere(prompt);
 
     if (!enhancedText) {
       return res.status(400).json({
@@ -52,13 +53,25 @@ const generateAIVideoWithPrompt = async (req, res, next) => {
         status: "error",
         message: "No images generated"
       });
+    } */
+
+    const images = ["https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685720/Prompt2Play/wbcuidcy2ujbj4ppzhva.png","https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685705/Prompt2Play/q0pgd4ivhapwn5ailsh2.png","https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685643/Prompt2Play/wwnfegorlcnpjfkefyqc.png"];
+    
+    const videoURLS = await generateVideoFromImageWithRunwayml(images,prompt);
+
+    if (!videoURLS) {
+      return res.status(400).json({
+        status: "error",
+        message: "No videos generated"
+      });
     }
 
     res.status(201).json({
       status: "success",
       message: "Video created successfully",
-      scenes,
-      images
+      videoURLS
+      // scenes,
+      // images
     });
   } catch (error) {
     console.log(error);

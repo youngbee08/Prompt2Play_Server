@@ -11,6 +11,4 @@ const decodeToken = async (token) =>{
     return decoded
 }
 
-module.exports = decodeToken
-
 module.exports = {generateAccessToken,decodeToken}

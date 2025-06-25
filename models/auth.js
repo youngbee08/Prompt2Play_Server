@@ -25,7 +25,8 @@ const userSchema = new mongoose.Schema({
     },
     phoneNumber:{
         type:String,
-        default:null
+        default:null,
+        unique:[true, "Phone Number already exists"]
     },
     profilePic:{
         type:String,

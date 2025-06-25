@@ -1,9 +1,9 @@
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const { cloudinary_js_config } = require("./cloudinary");
+const cloudinary = require("./cloudinary");
 const multer = require("multer");
 
 const storage = new CloudinaryStorage({
-    cloudinary:cloudinary_js_config,
+    cloudinary:cloudinary,
     params:{
         folders:"/Prompt2Play",
         allowedFormats: ['png','jpg','gif'],
