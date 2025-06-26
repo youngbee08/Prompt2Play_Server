@@ -81,7 +81,7 @@ const reloadUser = async (req,res,next) =>{
         if (!user) {
             return res.status(404).json({
                 status:"error",
-                message:"User Not Found"
+                message:"Could not find an account with the provided id, try signing up again"
             })
         }
         return res.status(200).json({
@@ -122,11 +122,9 @@ const verifyEmail = async (req,res,next) =>{
 };
 
 const signIn = async (req,res,next) =>{
-    const {password} = req.body;
-    const identifier = Object.keys(req.body).find(key => key !== "password");
-    const identifierValue = req.body[identifier];
+    const {password,email} = req.body;
     try {
-        const user = await userModel.findOne({[identifier]:identifierValue});
+        const user = await userModel.findOne({email});
         if (!user) {
             return res.status(400).json({
                 status:"error",

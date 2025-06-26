@@ -18,8 +18,14 @@ const handleDuplicateError = (error) => {
     const errorDetails = {
         status:400,
         message:errorMessage,
-        code:11000
+        code:errorCode
     };
+    console.log(error.code)
+    console.log(
+        err.code,
+        err.message,
+        err.status
+    )
     return errorDetails
 }
 
@@ -27,12 +33,12 @@ const handleError = (err,req,res,next) =>{
     let limitErrorMessage = handleLimitError(err);
     let duplicateError = handleDuplicateError(err);
     if (err.status === 429) {
-        return res.status(limitErrorMessage.status).json({
+        res.status(limitErrorMessage.status).json({
             status:"error",
             message:limitErrorMessage.message
         })
     }else if (err.code === duplicateError.code){
-        return res.status(duplicateError.status).json({
+        res.status(duplicateError.status).json({
             status:"error",
             message:duplicateError.message
         })
