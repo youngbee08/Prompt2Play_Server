@@ -9,24 +9,22 @@ const generateVideoFromImageWithRunwayml = async (promptImages, promptText) => {
   const videos = [];
 
   try {
-    for (const image of promptImages) {
-      const task = await client.imageToVideo.create({
-        model: "gen4_turbo",
-        promptImage: image,
-        promptText,
-        ratio: "1280:720",
-        duration: 5
-      });
+    const task = await client.imageToVideo.create({
+      model: "gen2-turbo",
+      promptImage: promptImages,
+      promptText,
+      ratio: "1280:720",
+      duration: 5
+    });
 
-      const result = await task.waitForTaskOutput();
+    const result = await task.waitForTaskOutput();
 
-      const videoUrl = result.output?.[0];
-      if (videoUrl) {
-        console.log("Video URL:", videoUrl);
-        videos.push(videoUrl);
-      } else {
-        console.log("No output found for this task.");
-      }
+    const videoUrl = result.output?.[0];
+    if (videoUrl) {
+      console.log("Video URL:", videoUrl);
+      videos.push(videoUrl);
+    } else {
+      console.warn("No output found for this task.");
     }
 
     return videos;

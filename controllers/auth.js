@@ -91,6 +91,7 @@ const reloadUser = async (req,res,next) =>{
         })
     } catch (error) {
         console.log(error)
+        next(error)
     }
 };
 
@@ -179,8 +180,8 @@ const requestforgotPasswordMail = async (req,res,next) =>{
         await userModel.findByIdAndUpdate(user._id, {emailVerifytoken:token, emailVerifytokenExp:tokenExp});
         sendForgotPasswordMail(user.userName, user.email, token);
         res.status(200).json({
-            status:"status",
-            message:"Password reset link mail has been sent successfully"
+            status:"success",
+            message:`We've sent a password reset link to ${user.email}. Please check your inbox (or spam folder).`
         })
     } catch (error) {
         console.log(error)
@@ -230,6 +231,23 @@ const setForgotPassword = async (req, res, next) => {
     } catch (error) {
         console.error("Password reset error:", error);
         next(error);
+    }
+};
+
+const getCurrentUser = async (req,res,next)=>{
+    const user = req.user;
+    try{
+        const confirmedUser = await userModel.findById(user._id).select("-password");
+        if (!confirmedUser) {
+            return res.status(400).json({
+                status:"error",
+                message:"unable to find user"
+            })
+        }
+        res.status(200).json({status:"success",user:confirmedUser})
+    }catch (error){
+        console.log(error)
+        next(error)
     }
 };
 
@@ -302,6 +320,7 @@ module.exports = {
     signIn,
     requestforgotPasswordMail,
     setForgotPassword,
+    getCurrentUser,
     resetPassword,
     updateProfile
 }

@@ -55,21 +55,23 @@ const generateAIVideoWithPrompt = async (req, res, next) => {
       });
     } */
 
-    const images = ["https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685720/Prompt2Play/wbcuidcy2ujbj4ppzhva.png","https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685705/Prompt2Play/q0pgd4ivhapwn5ailsh2.png","https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685643/Prompt2Play/wwnfegorlcnpjfkefyqc.png"];
-    
-    const videoURLS = await generateVideoFromImageWithRunwayml(images,prompt);
+    // const images = ["https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685720/Prompt2Play/wbcuidcy2ujbj4ppzhva.png","https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685705/Prompt2Play/q0pgd4ivhapwn5ailsh2.png","https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685643/Prompt2Play/wwnfegorlcnpjfkefyqc.png"];
 
-    if (!videoURLS) {
+    const image = 'https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685720/Prompt2Play/wbcuidcy2ujbj4ppzhva.png';
+    
+    const videoURL = await generateVideoFromImageWithRunwayml(image,prompt);
+
+    if (!videoURL) {
       return res.status(400).json({
         status: "error",
-        message: "No videos generated"
+        message: "No video generated"
       });
     }
 
     res.status(201).json({
       status: "success",
       message: "Video created successfully",
-      videoURLS
+      video:videoURL
       // scenes,
       // images
     });

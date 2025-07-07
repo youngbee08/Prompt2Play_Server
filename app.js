@@ -27,7 +27,7 @@ require("./utils/nodemailer/transporter");
 app.use("/api/auth", authRouter)
 app.use("/api/video", videoRouter)
 app.all("/{*any}", (req, res) => {
-  res.status(403).json(`${req.method} ${req.originalUrl} is not an endpoint on this server.`)
+  res.status(403).json({status:"error", message:`${req.method} ${req.originalUrl} is not an endpoint on this server.`})
 })
 
 app.use(handleError)

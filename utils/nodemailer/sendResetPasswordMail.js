@@ -30,7 +30,7 @@ const sendForgotPasswordMail = (userName, email, token) => {
                     </p>
 
                     <!-- Reset Password Button -->
-                    <a href="${clientDomain}/reset-password/${token}" style="display:inline-block; padding:14px 28px; background:linear-gradient(135deg, #1e3c72, #2a5298); color:#ffffff !important; text-decoration:none; border-radius:50px; font-weight:600; font-size:16px; margin:25px 0; transition:all 0.3s ease; box-shadow:0 4px 15px rgba(30,60,114,0.3);">
+                    <a href="${clientDomain}/mail/updatePassword/${token}" style="display:inline-block; padding:14px 28px; background:linear-gradient(135deg, #1e3c72, #2a5298); color:#ffffff !important; text-decoration:none; border-radius:50px; font-weight:600; font-size:16px; margin:25px 0; transition:all 0.3s ease; box-shadow:0 4px 15px rgba(30,60,114,0.3);">
                         Reset Password
                     </a>
 
