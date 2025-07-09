@@ -46,9 +46,9 @@ const userSchema = new mongoose.Schema({
         type:Date,
     },
     videos:{
-        type:mongoose.Schema.Types.ObjectId, 
+        type:[mongoose.Schema.Types.ObjectId], 
         ref:'videos',
-        default:null
+        default:[]
     }
 });
 

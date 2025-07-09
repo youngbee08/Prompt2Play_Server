@@ -7,7 +7,7 @@ const storage = new CloudinaryStorage({
     params:{
         folders:"/Prompt2Play",
         allowedFormats: ['png','jpg','gif'],
-        transformation : [{width: 500, height:500 }]
+        // transformation : [{width: 500, height:500 }]
     }
 })
 

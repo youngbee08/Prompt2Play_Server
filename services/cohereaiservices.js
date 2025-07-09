@@ -8,13 +8,13 @@ const cohere = new CohereClient({
 const enhanceAndSplitPromptWithCohere = async (userPrompt) => {
   try {
     const prompt = `
-      You are an AI assistant that turns user prompts into cinematic video scenes.
+      You are an AI assistant that turns user prompts into cinematic video description.
   
       Task:
       - Enhance the following story idea.
-      - Then split it into exactly 5 cinematic scene descriptions.
-      - Each scene must be 1 sentence only.
-      - Start each scene with "Scene 1:", "Scene 2:", ..., "Scene 5:" (no bold or formatting).
+      - Then split it into exactly 1 cinematic descriptions.
+      - Description must be 2 paragraph only and both should be less than 900 characters.
+      - Start description as normal text (no bold or formatting).
   
       User Prompt: "${userPrompt}"
     `;

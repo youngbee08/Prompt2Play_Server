@@ -77,7 +77,7 @@ const resendMail = async (req,res,next) =>{
 const reloadUser = async (req,res,next) =>{
     const {email} = req.body;
     try {
-        const user = await userModel.findOne({email}).select("-password");
+        const user = await userModel.findOne({email}).select(["-password","-videos"])
         if (!user) {
             return res.status(404).json({
                 status:"error",
@@ -290,15 +290,10 @@ const updateProfile = async (req,res,next)=>{
             message:"All fields are required"
         })
     }
-    if (!req.file) {
-        return res.status(400).json({
-            status:"error",
-            message:"Profile picture is required"
-        })
-    }
+    console.log(req.body)
     const user = req.user;
     const {fullName,userName,phoneNumber} = req.body;
-    const profilePic = req.file.path;
+    const profilePic = req?.file?.path;
     try {
         await userModel.findByIdAndUpdate(user._id, {fullName,userName,phoneNumber,profilePic:profilePic})
         res.status(200).json({

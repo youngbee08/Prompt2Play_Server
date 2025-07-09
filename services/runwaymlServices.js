@@ -1,41 +1,32 @@
-const { default: RunwayML, TaskFailedError } = require("@runwayml/sdk");
+const RunwayML = require("@runwayml/sdk");
 require("dotenv").config();
 
-const client = new RunwayML({
-  apiKey: process.env.RUNWAYML_API_SECRET
-});
+const client = new RunwayML({ apiKey: process.env.RUNWAYML_API_SECRET });
 
-const generateVideoFromImageWithRunwayml = async (promptImages, promptText) => {
-  const videos = [];
-
+const generateVideoFromImageWithRunwayml = async (promptImage, promptText) => {
   try {
-    const task = await client.imageToVideo.create({
-      model: "gen2-turbo",
-      promptImage: promptImages,
+    const taskPromise = client.imageToVideo.create({
+      model: "gen4_turbo",
+      promptImage,
       promptText,
       ratio: "1280:720",
-      duration: 5
+      duration: 5,
     });
 
-    const result = await task.waitForTaskOutput();
+    const result = await taskPromise.waitForTaskOutput();
 
     const videoUrl = result.output?.[0];
     if (videoUrl) {
-      console.log("Video URL:", videoUrl);
-      videos.push(videoUrl);
+      console.log("✅ Video URL:", videoUrl);
+      return videoUrl;
     } else {
-      console.warn("No output found for this task.");
+      console.warn("⚠️ No video generated.");
+      return null;
     }
 
-    return videos;
-
   } catch (error) {
-    // if (error instanceof TaskFailedError) {
-    //   console.error("Video generation task failed:", error.taskDetails);
-    // } else {
-    //   console.error("Error during video generation:", error);
-    // }
-    console.error("Error during video generation:", error);
+    console.error("❌ Error during video generation:", error);
+    return null;
   }
 };
 

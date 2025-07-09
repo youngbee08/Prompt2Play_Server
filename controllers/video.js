@@ -1,10 +1,13 @@
 const cloudinary = require("../config/cloudinary");
+const userModel = require("../models/auth");
+const videoModel = require("../models/video");
 const { enhanceAndSplitPromptWithCohere } = require("../services/cohereaiservices");
 const { generateVideoFromImageWithRunwayml } = require("../services/runwaymlServices");
 const { generateImageFromPromptWithStability } = require("../services/stabilityaiServices");
 
 const generateAIVideoWithPrompt = async (req, res, next) => {
   const { body } = req;
+  console.log(req.body)
   if (!body) {
     return res.status(403).json({
       status: "error",
@@ -13,67 +16,62 @@ const generateAIVideoWithPrompt = async (req, res, next) => {
   }
 
   const { prompt } = body;
+  const user = req.user;
   try {
-    /*const enhancedText = await enhanceAndSplitPromptWithCohere(prompt);
+    const enhancedPrompt = await enhanceAndSplitPromptWithCohere(prompt);
+    let imageUrl;
 
-    if (!enhancedText) {
+    if (!enhancedPrompt) {
       return res.status(400).json({
         status: "error",
-        message: "Unable to create video"
+        message: "An error occured while generating your video, Please try again!",
+        errorFrom:"Cohere(text)"
       });
     }
+    console.log(enhancedPrompt);
 
-    const extractScenes = (enhancedText) => {
-      const scenePattern = /Scene \d+:\s*(.+)/g;
-      const scenes = [];
-      let match;
+   const img = await generateImageFromPromptWithStability(enhancedPrompt);
+   if (img) {
+     const uploaded = await cloudinary.uploader.upload(img, {
+       folder: "Prompt2Play"
+     });
+     imageUrl = uploaded.secure_url;
+     console.log(imageUrl)
+   }else{
+    return res.status(200).json({
+      status:"error",
+      message: "An error occured while generating your video, Please try again!",
+      errorFrom:"Stability(img)"
+    })
+   }
 
-      while ((match = scenePattern.exec(enhancedText)) !== null) {
-        scenes.push(match[1].trim());
-      }
-
-      return scenes;
-    };
-
-    const scenes = extractScenes(enhancedText);
-    const images = [];
-
-    for (const scene of scenes) {
-      const img = await generateImageFromPromptWithStability(scene);
-      if (img) {
-        const uploaded = await cloudinary.uploader.upload(img, {
-          folder: "Prompt2Play"
-        });
-        images.push(uploaded.secure_url);
-      }
-    }
-
-    if (!images.length) {
-      return res.status(400).json({
-        status: "error",
-        message: "No images generated"
-      });
-    } */
-
-    // const images = ["https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685720/Prompt2Play/wbcuidcy2ujbj4ppzhva.png","https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685705/Prompt2Play/q0pgd4ivhapwn5ailsh2.png","https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685643/Prompt2Play/wwnfegorlcnpjfkefyqc.png"];
-
-    const image = 'https://res.cloudinary.com/dtmllxk1r/image/upload/v1750685720/Prompt2Play/wbcuidcy2ujbj4ppzhva.png';
     
-    const videoURL = await generateVideoFromImageWithRunwayml(image,prompt);
+    const videoURL = await generateVideoFromImageWithRunwayml(imageUrl,enhancedPrompt);
+    console.log(videoURL)
 
     if (!videoURL) {
       return res.status(400).json({
         status: "error",
-        message: "No video generated"
+        message: "An error occured while generating your video, Please try again!",
+        errorFrom:"runway(video)"
       });
     }
+
+    const video = await videoModel.create({...body,createdBy:user._id,videoUrl:videoURL});
+
+    if (!video) {
+      return res.status(400).json({
+        status: "error",
+        message: "An error occured while generating your video, Please try again!",
+      });
+    }
+
+    await userModel.findByIdAndUpdate(user._id, {$push:{videos:video._id}})
 
     res.status(201).json({
       status: "success",
       message: "Video created successfully",
       video:videoURL
-      // scenes,
-      // images
     });
   } catch (error) {
     console.log(error);
@@ -81,4 +79,25 @@ const generateAIVideoWithPrompt = async (req, res, next) => {
   }
 };
 
-module.exports = { generateAIVideoWithPrompt };
+const getVideos = async (req,res,next)=>{
+  const user = req.user;
+  try {
+    const findUserVideos = await userModel.findById(user._id).populate("videos");
+    if (!findUserVideos) {
+      return res.status(400).json({
+        status:"success",
+        message:"Unable to find videos"
+      });
+    }
+    const videos = findUserVideos.videos;
+    res.status(200).json({
+      status:200,
+      videos
+    })
+  } catch (error) {
+    console.log(error)
+    next(error)
+  }
+};
+
+module.exports = { generateAIVideoWithPrompt,getVideos };
