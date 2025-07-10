@@ -10,7 +10,7 @@ const generateVideoFromImageWithRunwayml = async (promptImage, promptText) => {
       promptImage,
       promptText,
       ratio: "1280:720",
-      duration: 10,
+      duration: 5,
     });
 
     const result = await taskPromise.waitForTaskOutput();
